@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 
 public enum ColorType {
     Blue,
@@ -25,9 +25,31 @@ public class Block : MonoBehaviour {
     //public bool CanFall = true; // 是否能自由下落
     public Vector2Int pos;
 
+    public bool selected;
+    private EventHandler selectEvent;
+
+    void Awake(){
+        selectEvent += OnSelected;
+    }
 
     private void Update() {
         transform.localPosition = new Vector3(pos.x, pos.y);
+        if (selected) Select();
     }
+
+    public void Select(){
+        selected = true;
+        selectEvent(this,EventArgs.Empty);
+    }
+
+    public void OnSelected(object o,EventArgs e){
+        PlayeSelectAnim();
+    }
+    public void PlayeSelectAnim(){
+        Debug.Log("Selcted");
+        GetComponent<Animation>().Play("BlockSelected");
+    }
+
+
 
 }

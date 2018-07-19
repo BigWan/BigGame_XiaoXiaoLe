@@ -19,7 +19,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     /// 可用的格子列表(后面场景编辑器就是编辑这个)
     /// 会用作大部分对象字典的key值
     /// </summary>
-    public List<Vector2Int> coords;       
+    public List<Vector2Int> coords;
 
     [Header("# ResRef")]
     public Cell cellPrefab;         // 单元格
@@ -30,9 +30,8 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     public GameObject blocksHolder;
 
     // 变量
-    //private List<Cell> cells;           // 背景块引用
-    //private List<Block> blocks;         // Block对象列表
-    public Dictionary<Vector2Int, Block> blocks;  // Block 字典,key是坐标
+
+    public Dictionary<Vector2Int, Block> blocks;  // Block 字典,key是坐标1
     public Dictionary<Vector2Int, Cell> cells; // Cell字典
     //private int[,] matrix;              // 矩阵信息
 
@@ -41,7 +40,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     // Event
     private SelectedBlockChangeHandler SelectedBlockChange;
 
-    
+
 
     private Block _currentSelectedBlock; // 当前选择对象的引用
     public Block currentSelectedBlock {
@@ -101,7 +100,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     /// <param name="parent">父物体</param>
     void CreateCell(Vector2Int coord,bool lord,Transform parent) {
         Cell c = Instantiate(cellPrefab) as Cell;
-        c.lord = lord;        
+        c.lord = lord;
         c.transform.SetParent(parent,false);
         c.pos = coord;
         cells.Add(coord,c);
@@ -149,7 +148,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
 
     }
 
-    
+
     void CheckClear() {
 
     }
@@ -158,17 +157,19 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         return coords.Contains(pos);
     }
 
-    
 
-    void CheckBlocks() {
+
+    public void CheckBlocks() {
+        Debug.Log("开始遍历检查小动物" + blocks.Count.ToString());
         foreach (var b in blocks) {
             b.Value.CheckNeightbourColor();
         }
-    }
 
-    void CheckAllBlockCount() {
         foreach (var b in blocks) {
             b.Value.CheckNeighbours();
+        }
+        foreach (var b in blocks) {
+            b.Value.CalcBombType();
         }
     }
 
@@ -185,6 +186,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
 
         foreach (var item in blocks) {
             BlockPool.Instance.Push(item.Value,(int)item.Value.colorType);
+            // blocks[item.Key] = null;
         }
 
         CreateBlocks();
@@ -192,8 +194,10 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         //currentSelectedBlock = blocks[selectPos];
         //if(hasSelected)
         //    blocks[selectPos].Select();
-        CheckBlocks();
-        CheckAllBlockCount();
+
+
+    }
+    public void Bombs(){
         CheckBombs();
     }
 
@@ -220,27 +224,55 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         CreateGrid();
         CreateBlocks();
 
-        CheckBlocks();
-        CheckAllBlockCount();
-        CheckBombs();
+
     }
 
-
-    
+    public List<Block>[] bombsBlocks = new List<Block>[10];
+    /// <summary>
+    /// 检查并引爆所有炸弹（引爆过程中小动物不下落）
+    /// </summary>
     void CheckBombs() {
-        List<Block>[] bombsBlocks = new List<Block>[5];
-        for (int i = 0; i < 5; i++) {
+
+        for (int i = 0; i < 10; i++) {
             bombsBlocks[i] = new List<Block>();
         }
         foreach (var b in blocks.Values) {
-            if (b.CheckBombType() != BombType.None) {
-                bombsBlocks[(int)b.CheckBombType()-1].Add(b);
+            if (b.bombType != BombType.None) {
+                bombsBlocks[(int)b.CalcBombType()].Add(b);
             }
         }
 
-        foreach (var item in bombsBlocks[(int)BombType.Super]) {
+        foreach (var item in bombsBlocks[(int)BombType.NormalV]) {
 
+            Block[] db = new Block[3];
+            db[0] = item.GetNeighbour(2);
+            db[1] = item.GetNeighbour(0);
+            db[2] = item;
+
+            for (int i = 0; i < 3; i++) {
+                blocks.Remove(db[i].pos);
+                BlockPool.Instance.Push(db[i]);
+                // db[i].transform.localScale = Vector3.one*0.1f;
+            }
+
+            item.afterBombType = item.bombType;
+            item.bombType = BombType.None;
         }
-        
+        foreach (var item in bombsBlocks[(int)BombType.NormalH]) {
+
+            Block[] db = new Block[3];
+            db[0] = item.GetNeighbour(1);
+            db[1] = item.GetNeighbour(3);
+            db[2] = item;
+
+            for (int i = 0; i < 3; i++) {
+                blocks.Remove(db[i].pos);
+                BlockPool.Instance.Push(db[i]);
+                // db[i].transform.localScale = Vector3.one*0.1f;
+            }
+
+            item.afterBombType = item.bombType;
+            item.bombType = BombType.None;
+        }
     }
 }

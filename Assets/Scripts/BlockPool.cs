@@ -14,8 +14,8 @@ public class BlockPool : UnitySingleton<BlockPool> {
 	public Stack<Block>[] remainBlocks;
 
 	void Awake(){
-		if (blockPrefabs.Length == 0)
-			return;
+		Debug.Assert(blockPrefabs.Length > 0 ,"没有预置物体");
+
 		remainBlocks = new Stack<Block>[blockPrefabs.Length];
         for (int i = 0; i < blockPrefabs.Length; i++) {
             remainBlocks[i] = new Stack<Block>();
@@ -63,5 +63,9 @@ public class BlockPool : UnitySingleton<BlockPool> {
 			b.transform.Reset(transform);
             b.Reset();
 		}
+	}
+
+	public void Push(Block b){
+		Push(b,(int)b.colorType);
 	}
 }

@@ -15,11 +15,13 @@ public enum ColorType {
 public enum BombType {
     None  , // 没有炸弹
     Normal, // 正常
-    Super, // 变色炸弹
-    HLine, // 水平炸弹
-    VLine, // 垂直炸弹
-    Circle // 圆形炸弹
+    Super,  // 变色炸弹
+    HLine,  // 水平炸弹
+    VLine,  // 垂直炸弹
+    Circle  // 圆形炸弹
 }
+
+
 
 /// <summary>
 /// 消消乐里面的块,小动物,蔬菜,或是其他的东西

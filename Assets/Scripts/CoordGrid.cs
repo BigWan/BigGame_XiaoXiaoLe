@@ -77,6 +77,9 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
                 coords.Add(new Vector2Int(x, y));
             }
         }
+        for (int i = 0; i < 6; i++) {
+            coords.RemoveAt(Random.Range(0,coords.Count));
+        }
     }
 
     /// <summary>

@@ -52,8 +52,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1e629f5bc6e5bd418cbdf11385e3ad8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  upAble: 0
-  rightAble: 0
+  _pos: {x: 0, y: 0}
+  _lord: 0
+  lightSprite: {fileID: 21300000, guid: 536a9d28e2015a146ac8a1b94f28f0e9, type: 3}
+  darkSprite: {fileID: 21300000, guid: fb99d6d2565e3f54ca43959927c06462, type: 3}
 --- !u!212 &212381526579466194
 SpriteRenderer:
   m_ObjectHideFlags: 1

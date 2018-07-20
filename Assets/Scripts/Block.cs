@@ -43,6 +43,7 @@ public enum Direction{
 /// <summary>
 /// 消消乐里面的块,小动物,蔬菜,或是其他的东西
 /// </summary>
+[DisallowMultipleComponent]
 [RequireComponent(typeof(Animation))]
 public class Block : MonoBehaviour {
 
@@ -51,13 +52,52 @@ public class Block : MonoBehaviour {
 
     public Vector2Int pos;
 
-    public int[] depths;  // 四条边上每个方向同色数量
-    public bool[] isSameColor;     // 四条边是否和周围的同色
+    public int[] concolorLength;       // 四方向同色块数量,根据这个判断炸弹类型
+    public bool[] isEdgeConcolor;      // 四条边是否和neighbour同色
 
-    public BombType bombType;           // 计算前的炸弹类型
-    public BombType afterBombType;        // 计算后的炸弹类型
+    [NonSerialized]
+    private BombType _bombType;           // 检查前的炸弹类型
+    public BombType bombType {
+        get { return _bombType; }
+        set {
+            _bombType = value;
+            switch (_bombType) {
+                case BombType.SuperH:
+                case BombType.SuperV:
+                    _sr.sprite = sp_S;
+                    break;
+                case BombType.Circle1:
+                case BombType.Circle2:
+                case BombType.Circle3:
+                case BombType.Circle4:
+                    _sr.sprite = sp_C;
+                    break;
+                case BombType.LineH:
+                    _sr.sprite = sp_V;
+                    break;
+                case BombType.LineV:
+                    _sr.sprite = sp_V;
+                    break;
+                case BombType.NormalH:
+                case BombType.NormalV:
+                case BombType.None:
+                    _sr.sprite = sp_N2;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }           
+    public BombType afterBombType;      // 计算后的炸弹类型
 
+    [Header("资源")]
     public AnimationClip selectedClip;
+    public Sprite sp_N;
+    public Sprite sp_N2;
+    public Sprite sp_H;
+    public Sprite sp_V;
+    public Sprite sp_C;
+    public Sprite sp_S;    
 
 
     /// <summary>
@@ -100,13 +140,14 @@ public class Block : MonoBehaviour {
     // 重置数据
     public void Reset() {
         _selected = false;
-        isSameColor = new bool[4] { false, false, false, false };
-        depths = new int[4] { 0, 0, 0, 0 };
+        isEdgeConcolor = new bool[4] { false, false, false, false };
+        concolorLength = new int[4] { 0, 0, 0, 0 };
         pos = Vector2Int.zero;
         name = "pooled" + colorType.ToString();
 
         bombType = BombType.None;
         afterBombType = BombType.None;
+
     }
 
     public void Select(){
@@ -139,73 +180,114 @@ public class Block : MonoBehaviour {
         StopPlayAnim();
     }
 
-
     // 炸弹类型
     public BombType CalcBombType() {
         // 五连
-        if(depths[0] == 2 && depths[2] == 4){ bombType = BombType.SuperV;return bombType; }
-        if(depths[1] == 2 && depths[3] == 4){ bombType = BombType.SuperH;return bombType; }
+        if(concolorLength[0] == 2 && concolorLength[2] >= 2){ bombType = BombType.SuperV;return bombType; }
+        if(concolorLength[3] == 2 && concolorLength[1] >= 2){ bombType = BombType.SuperH;return bombType; }
         // 圆炸
-        if(depths[0] ==2 && depths[1] == 2){ bombType = BombType.Circle1;return bombType;}
-        if(depths[1] ==2 && depths[2] == 2){ bombType = BombType.Circle2;return bombType;}
-        if(depths[2] ==2 && depths[3] == 2){ bombType = BombType.Circle3;return bombType;}
-        if(depths[3] ==2 && depths[0] == 2){ bombType = BombType.Circle4;return bombType;}
+        if(concolorLength[0] >= 2 && concolorLength[1] >= 2){ bombType = BombType.Circle1;return bombType;}
+        if(concolorLength[1] >= 2 && concolorLength[2] >= 2){ bombType = BombType.Circle2;return bombType;}
+        if(concolorLength[2] >= 2 && concolorLength[3] >= 2){ bombType = BombType.Circle3;return bombType;}
+        if(concolorLength[3] >= 2 && concolorLength[0] >= 2){ bombType = BombType.Circle4;return bombType;}
         // 线炸
-        if(depths[0] ==1 && depths[2] == 2){ bombType = BombType.LineV;return bombType;}
-        if(depths[1] ==1 && depths[3] == 2){ bombType = BombType.LineH;return bombType;}
+        if(concolorLength[0] == 1 && concolorLength[2] == 2){ bombType = BombType.LineV;return bombType;}
+        if(concolorLength[3] == 1 && concolorLength[1] == 2){ bombType = BombType.LineH;return bombType;}
         // 普通消失
-        if(depths[0] ==1 && depths[2] == 1){ bombType = BombType.NormalV;return bombType;}
-        if(depths[1] ==1 && depths[3] == 1){ bombType = BombType.NormalH;return bombType;}
+        if(concolorLength[0] == 1 && concolorLength[2] == 1){ bombType = BombType.NormalV;return bombType;}
+        if(concolorLength[1] == 1 && concolorLength[3] == 1){ bombType = BombType.NormalH;return bombType;}
 
-        bombType = BombType.None;        return bombType;
+        bombType = BombType.None; return bombType;
+    }
+
+    public void Bomb() {
+        switch (bombType) {
+            case BombType.SuperH: // 垂直五连
+                bombType = BombType.None;
+
+                break;
+            case BombType.SuperV:
+                break;
+            case BombType.Circle1:
+                break;
+            case BombType.Circle2:
+                break;
+            case BombType.Circle3:
+                break;
+            case BombType.Circle4:
+                break;
+            case BombType.LineH:
+                break;
+            case BombType.LineV:
+                break;
+            case BombType.NormalH:
+                break;
+            case BombType.NormalV:
+                break;
+            case BombType.None:
+                break;
+            default:
+                break;
+        }
+    }
+
+    // 方块移动并合成炸弹
+    public void Disappear(Vector2Int pos) {
+
     }
 
     /// <summary>
     /// 获取某个方向的邻居单元格
     /// </summary>
-    /// <param name="dir"> 上下左右</param>
+    /// <param name="dir"> 上下左右 </param>
     /// <returns>Block,可能会为空,因为消除后空格上是没有Block的</returns>
     public Block GetNeighbour(Vector2Int dir) {
-        if (CoordGrid.Instance.InBound(pos + dir))
-            return CoordGrid.Instance.blocks[pos + dir];
-        else
-            return null;
+        return GetNeighbour(dir, 1);
     }
     public Block GetNeighbour(int idx) {
-        return GetNeighbour(neighboursOffset[idx]);
+        return GetNeighbour(neighboursOffset[idx], 1);
+    }
+    public Block GetNeighbour(int idx,int dis) {
+        return GetNeighbour(neighboursOffset[idx],dis);
+    }
+    public Block GetNeighbour(Vector2Int dir, int distance) {
+        Vector2Int npos = pos + dir * distance;
+        if (CoordGrid.Instance.blocks.ContainsKey(npos))
+            return CoordGrid.Instance.blocks[npos];
+        return null;
     }
 
-    // 检测邻居是否同色,填充 isSameColor数组
+    // 检测邻居是否同色,填充 isEdgeConcolor 数组
     public void CheckNeightbourColor() {
         Block b;
         for (int i = 0; i < 4; i++) {
             b = GetNeighbour(neighboursOffset[i]);
             if (b)
-                isSameColor[i] = b.colorType == colorType;
+                isEdgeConcolor[i] = b.colorType == colorType;
             else
-                isSameColor[i] = false;
+                isEdgeConcolor[i] = false;
         }
     }
 
 
-
-    // 计算同色连体块的长度
-    public void CheckNeighbours() {
+    // 计算同色块的长度
+    public void CalcConcolorLength() {
         Block b;
         for (int i = 0; i < 4; i++) {
             b = GetNeighbour(i);
             if (b && b.colorType == colorType) {
-                AddLength(i);
+                AddConcolorLength(i);
             }
         }
-
     }
-    public void AddLength(int idx) {
-        depths[idx] += 1;
-        if (isSameColor[(idx+2)%4]) {
-            GetNeighbour((idx + 2) % 4).AddLength(idx);
+
+    public void AddConcolorLength(int dirIdx) {
+        concolorLength[dirIdx] += 1;
+        if (isEdgeConcolor[(dirIdx+2)%4]) {
+            GetNeighbour((dirIdx+2)%4).AddConcolorLength(dirIdx);
         }
     }
+
 
 
 }

@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 public delegate void SelectedBlockChangeHandler(Vector2Int selectPos);
 
 
-[SelectionBase]
+[SelectionBase, DisallowMultipleComponent]
 public class CoordGrid : UnitySingleton<CoordGrid> {
 
     [Header("# Size")]
@@ -71,15 +71,15 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
 
     // 初始化场景坐标信息
     void CreateCoords() {
-        coords = new List<Vector2Int>();
+        coords.Clear();
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 coords.Add(new Vector2Int(x, y));
             }
         }
-        for (int i = 0; i < 6; i++) {
-            coords.RemoveAt(Random.Range(0,coords.Count));
-        }
+        //for (int i = 0; i < 6; i++) {
+        //    coords.RemoveAt(Random.Range(0,coords.Count));
+        //}
     }
 
     /// <summary>
@@ -87,14 +87,15 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     /// </summary>
     void CreateGrid() {
         bool lord = false;
-        cells = new Dictionary<Vector2Int, Cell>();
-
+        
+        cells.Clear();
         foreach (var coord in coords) {
             lord = Convert.ToBoolean((coord.x + coord.y) & 1);
             CreateCell(coord, lord, transform);
         }
 
     }
+
     /// <summary>
     /// 创建格子单元格
     /// </summary>
@@ -109,13 +110,11 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         cells.Add(coord,c);
     }
 
-
-
     /// <summary>
     /// 用Block填充场景
     /// </summary>
     void CreateBlocks() {
-        blocks = new Dictionary<Vector2Int, Block>();
+        blocks.Clear();
         if (blocksHolder == null) {
             blocksHolder = new GameObject() {
                 name = "BlockHolder",
@@ -144,23 +143,9 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         //matrix[x, y] = (int)b.colorType;
     }
 
-    /// <summary>
-    /// 消除
-    /// </summary>
-    void ClearUp() {
-
-    }
-
-
-    void CheckClear() {
-
-    }
-
     public bool InBound(Vector2Int pos) {
         return coords.Contains(pos);
     }
-
-
 
     public void CheckBlocks() {
         Debug.Log("开始遍历检查小动物" + blocks.Count.ToString());
@@ -169,7 +154,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         }
 
         foreach (var b in blocks) {
-            b.Value.CheckNeighbours();
+            b.Value.CalcConcolorLength();
         }
         foreach (var b in blocks) {
             b.Value.CalcBombType();
@@ -178,31 +163,19 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
 
 
     public void ReSpawnBlocks() {
-        //Vector2Int selectPos = Vector2Int.zero;
-        //bool hasSelected = false;
         if (currentSelectedBlock) {
             currentSelectedBlock.Deselect();
-            //selectPos = currentSelectedBlock.pos;
-            //hasSelected = true;
         }
-
-
         foreach (var item in blocks) {
             BlockPool.Instance.Push(item.Value,(int)item.Value.colorType);
-            // blocks[item.Key] = null;
         }
+
+        //Debug.Break();
 
         CreateBlocks();
 
-        //currentSelectedBlock = blocks[selectPos];
-        //if(hasSelected)
-        //    blocks[selectPos].Select();
-
-
     }
-    public void Bombs(){
-        CheckBombs();
-    }
+
 
     /// <summary>
     /// 选择框改变事件
@@ -222,31 +195,33 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     private void Awake() {
         SelectedBlockChange += OnSelectedBlockChange;
         transform.localPosition = origin;
-
+        coords = new List<Vector2Int>();
+        cells = new Dictionary<Vector2Int, Cell>();
+        blocks = new Dictionary<Vector2Int, Block>();
         CreateCoords();
         CreateGrid();
         CreateBlocks();
-
-
-    }
-
-    public List<Block>[] bombsBlocks = new List<Block>[10];
-    /// <summary>
-    /// 检查并引爆所有炸弹（引爆过程中小动物不下落）
-    /// </summary>
-    void CheckBombs() {
-
+        
         for (int i = 0; i < 10; i++) {
             bombsBlocks[i] = new List<Block>();
+        }
+    }
+
+
+    public List<Block>[] bombsBlocks = new List<Block>[10];
+    public void GetAllBombs() {
+        for (int i = 0; i < 10; i++) {
+            bombsBlocks[i].Clear();
         }
         foreach (var b in blocks.Values) {
             if (b.bombType != BombType.None) {
                 bombsBlocks[(int)b.CalcBombType()].Add(b);
             }
         }
-
+    }
+    void Bombs() {
+        GetAllBombs();
         foreach (var item in bombsBlocks[(int)BombType.NormalV]) {
-
             Block[] db = new Block[3];
             db[0] = item.GetNeighbour(2);
             db[1] = item.GetNeighbour(0);
@@ -255,12 +230,12 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
             for (int i = 0; i < 3; i++) {
                 blocks.Remove(db[i].pos);
                 BlockPool.Instance.Push(db[i]);
-                // db[i].transform.localScale = Vector3.one*0.1f;
             }
 
             item.afterBombType = item.bombType;
             item.bombType = BombType.None;
         }
+
         foreach (var item in bombsBlocks[(int)BombType.NormalH]) {
 
             Block[] db = new Block[3];
@@ -269,8 +244,10 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
             db[2] = item;
 
             for (int i = 0; i < 3; i++) {
-                blocks.Remove(db[i].pos);
-                BlockPool.Instance.Push(db[i]);
+                if (db[i]) {
+                    blocks.Remove(db[i].pos);
+                    BlockPool.Instance.Push(db[i]);
+                }
                 // db[i].transform.localScale = Vector3.one*0.1f;
             }
 

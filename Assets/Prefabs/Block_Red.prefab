@@ -96,11 +96,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   colorType: 3
   pos: {x: 0, y: 0}
-  depths: 
-  isSameColor: 
-  bombType: 10
+  concolorLength: 
+  isEdgeConcolor: 
   afterBombType: 10
   selectedClip: {fileID: 7400000, guid: d4109f38ba313704e9d68ecc66a3a02a, type: 2}
+  sp_H: {fileID: 21300000, guid: 4eaaef8e6b994044ebac7ef2ae1da2d6, type: 3}
+  sp_N: {fileID: 21300000, guid: 42cc4f920e61a7648b387363fae0869e, type: 3}
+  sp_O: {fileID: 21300000, guid: 179249e765cc0fe47b047169a71d54e7, type: 3}
+  sp_V: {fileID: 21300000, guid: 0fe31aa01f0679f48b45b7ef0098862c, type: 3}
+  sp_C: {fileID: 21300000, guid: 11a3f6a03112d874b89e7154d8413ec9, type: 3}
+  sp_S: {fileID: 21300000, guid: 396abe9c152f2d14dbed2b53b7a4bfe0, type: 3}
   _selected: 0
 --- !u!212 &212267687326788770
 SpriteRenderer:
@@ -145,5 +150,5 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 2

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class BlockPool : UnitySingleton<BlockPool> {
 
 	[Header("#Pooled Prefab")]
@@ -56,7 +57,7 @@ public class BlockPool : UnitySingleton<BlockPool> {
     /// <param name="idx">Block对象的idx</param>
 	public void Push(Block b,int idx){
 		if(remainBlocks[idx].Count >= MaxStored){
-			Destroy(b);
+			DestroyImmediate(b.gameObject);
 		}else{
 			remainBlocks[idx].Push(b);
 			b.gameObject.SetActive(false);

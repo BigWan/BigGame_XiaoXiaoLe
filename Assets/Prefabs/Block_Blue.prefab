@@ -18,11 +18,12 @@ GameObject:
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 5
   m_Component:
-  - component: {fileID: 4570445764710510}
+  - component: {fileID: 224542519305909020}
   - component: {fileID: 212267687326788770}
   - component: {fileID: 114927347300819856}
   - component: {fileID: 111977344651662728}
   - component: {fileID: 61197926661741968}
+  - component: {fileID: 222617475121031706}
   m_Layer: 8
   m_Name: Block_Blue
   m_TagString: Block
@@ -30,19 +31,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4570445764710510
-Transform:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1808987257398390}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &61197926661741968
 BoxCollider2D:
   m_ObjectHideFlags: 1
@@ -96,11 +84,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   colorType: 0
   pos: {x: 0, y: 0}
-  depths: 
-  isSameColor: 
-  bombType: 10
+  concolorLength: 
+  isEdgeConcolor: 
   afterBombType: 10
   selectedClip: {fileID: 7400000, guid: d4109f38ba313704e9d68ecc66a3a02a, type: 2}
+  sp_H: {fileID: 21300000, guid: 3902b37161839a64088bf94559b073a2, type: 3}
+  sp_N: {fileID: 21300000, guid: 62b951699ba35cb4bb1a8c1013b3a7f3, type: 3}
+  sp_O: {fileID: 21300000, guid: 90dcc9f6d3412b44bbadc76027cb8aa1, type: 3}
+  sp_V: {fileID: 21300000, guid: 07c6cf91433b35b418791f600d6f638b, type: 3}
+  sp_C: {fileID: 21300000, guid: d1823d09b9ce72b41a1c13f984e4aedd, type: 3}
+  sp_S: {fileID: 21300000, guid: 396abe9c152f2d14dbed2b53b7a4bfe0, type: 3}
   _selected: 0
 --- !u!212 &212267687326788770
 SpriteRenderer:
@@ -145,5 +138,29 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 2
+--- !u!222 &222617475121031706
+CanvasRenderer:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1808987257398390}
+--- !u!224 &224542519305909020
+RectTransform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1808987257398390}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1, y: 1}
+  m_Pivot: {x: 0.5, y: 0.5}

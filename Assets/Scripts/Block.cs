@@ -87,7 +87,7 @@ public class Block : MonoBehaviour {
                     break;
             }
         }
-    }           
+    }
     public BombType afterBombType;      // 计算后的炸弹类型
 
     [Header("资源")]
@@ -97,7 +97,7 @@ public class Block : MonoBehaviour {
     public Sprite sp_H;
     public Sprite sp_V;
     public Sprite sp_C;
-    public Sprite sp_S;    
+    public Sprite sp_S;
 
 
     /// <summary>
@@ -130,7 +130,7 @@ public class Block : MonoBehaviour {
         selectEvent += OnSelected;
         deselectEvent += OnDeselect;
 
-        Reset();
+        // Reset();
     }
 
     private void Update() {

@@ -47,7 +47,6 @@ public enum Direction{
 [RequireComponent(typeof(Animation))]
 public class Block : MonoBehaviour {
 
-
     public ColorType colorType;
 
     public Vector2Int pos;
@@ -55,36 +54,30 @@ public class Block : MonoBehaviour {
     public int[] concolorLength;       // 四方向同色块数量,根据这个判断炸弹类型
     public bool[] isEdgeConcolor;      // 四条边是否和neighbour同色
 
-    [NonSerialized]
+    [SerializeField]
     private BombType _bombType;           // 检查前的炸弹类型
     public BombType bombType {
         get { return _bombType; }
         set {
             _bombType = value;
-            switch (_bombType) {
-                case BombType.SuperH:
-                case BombType.SuperV:
-                    _sr.sprite = sp_S;
-                    break;
-                case BombType.Circle1:
-                case BombType.Circle2:
-                case BombType.Circle3:
-                case BombType.Circle4:
-                    _sr.sprite = sp_C;
-                    break;
-                case BombType.LineH:
-                    _sr.sprite = sp_V;
-                    break;
-                case BombType.LineV:
-                    _sr.sprite = sp_V;
-                    break;
-                case BombType.NormalH:
-                case BombType.NormalV:
-                case BombType.None:
-                    _sr.sprite = sp_N2;
-                    break;
-                default:
-                    break;
+            if( _bombType==BombType.SuperH ||
+                _bombType == BombType.SuperV){
+                _spriteRenderer.sprite = sp_S;
+                _animator.SetInteger("BombType",4);
+            }else if(   _bombType==BombType.Circle1 ||
+                        _bombType==BombType.Circle3 ||
+                        _bombType==BombType.Circle3 ||
+                        _bombType==BombType.Circle4){
+                _spriteRenderer.sprite = sp_N;
+                _animator.SetInteger("BombType",3);
+            }else if(   _bombType==BombType.LineH){
+                _spriteRenderer.sprite = sp_N;
+                _animator.SetInteger("BombType",1);
+            }else if(   _bombType==BombType.LineV){
+                _spriteRenderer.sprite = sp_N;
+                _animator.SetInteger("BombType",2);
+            }else{
+                _spriteRenderer.sprite = sp_N;
             }
         }
     }
@@ -94,9 +87,6 @@ public class Block : MonoBehaviour {
     public AnimationClip selectedClip;
     public Sprite sp_N;
     public Sprite sp_N2;
-    public Sprite sp_H;
-    public Sprite sp_V;
-    public Sprite sp_C;
     public Sprite sp_S;
 
 
@@ -113,7 +103,8 @@ public class Block : MonoBehaviour {
     private EventHandler deselectEvent;
 
     private Animation _anim;
-    private SpriteRenderer _sr;
+    private SpriteRenderer _spriteRenderer;
+    private Animator _animator;
 
     private static Vector2Int[] neighboursOffset = new Vector2Int[] {
         Vector2Int.up,
@@ -126,7 +117,8 @@ public class Block : MonoBehaviour {
 
     void Awake(){
         _anim = GetComponent<Animation>();
-        _sr = GetComponent<SpriteRenderer>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        _animator = GetComponentInChildren <Animator>();
         selectEvent += OnSelected;
         deselectEvent += OnDeselect;
 
@@ -140,7 +132,7 @@ public class Block : MonoBehaviour {
     // 重置数据
     public void Reset() {
         _selected = false;
-        isEdgeConcolor = new bool[4] { false, false, false, false };
+        isEdgeConcolor = new bool[4] { false,false,false,false };
         concolorLength = new int[4] { 0, 0, 0, 0 };
         pos = Vector2Int.zero;
         name = "pooled" + colorType.ToString();
@@ -262,10 +254,8 @@ public class Block : MonoBehaviour {
         Block b;
         for (int i = 0; i < 4; i++) {
             b = GetNeighbour(neighboursOffset[i]);
-            if (b)
+            if (b )
                 isEdgeConcolor[i] = b.colorType == colorType;
-            else
-                isEdgeConcolor[i] = false;
         }
     }
 
@@ -283,7 +273,7 @@ public class Block : MonoBehaviour {
 
     public void AddConcolorLength(int dirIdx) {
         concolorLength[dirIdx] += 1;
-        if (isEdgeConcolor[(dirIdx+2)%4]) {
+        if (isEdgeConcolor[(dirIdx+2)%4] == true) {
             GetNeighbour((dirIdx+2)%4).AddConcolorLength(dirIdx);
         }
     }

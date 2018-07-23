@@ -134,11 +134,12 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     void SpawnBlock(Vector2Int coord,Transform p) {
 
         Block b = BlockPool.Instance.RandomPop();
-
+        b.Reset();
         b.transform.Reset(p);
         b.pos = coord;
         b.name = coord.ToString();
         blocks.Add(b.pos, b);
+        Debug.Log("Spawn" + b.name);
         //matrix[x, y] = (int)b.colorType;
     }
 
@@ -146,24 +147,34 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         return coords.Contains(pos);
     }
 
+    /// <summary>
+    /// 检查小动物是否能形成炸弹
+    /// </summary>
     public void CheckBlocks() {
         Debug.Log("开始遍历检查小动物" + blocks.Count.ToString());
+        // 调查邻边
+
         foreach (var b in blocks) {
+            b.Value.isEdgeConcolor = new bool[4] { false, false, false, false };
             b.Value.CheckNeightbourColor();
         }
-
+        // 计算同色长度
         foreach (var b in blocks) {
             b.Value.ResetConcolor();
         }
         foreach (var b in blocks) {
             b.Value.CalcConcolorLength();
         }
+        // 预先统计炸弹类型
         foreach (var b in blocks) {
             b.Value.CalcBombType();
         }
     }
 
 
+    /// <summary>
+    ///  重新生成小动物
+    /// </summary>
     public void ReSpawnBlocks() {
         if (currentSelectedBlock) {
             currentSelectedBlock.Deselect();
@@ -171,8 +182,6 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         foreach (var item in blocks) {
             BlockPool.Instance.Push(item.Value,(int)item.Value.colorType);
         }
-
-        //Debug.Break();
 
         CreateBlocks();
 
@@ -204,6 +213,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         CreateGrid();
         CreateBlocks();
 
+        // 炸弹引用列表
         for (int i = 0; i < 10; i++) {
             bombsBlocks[i] = new List<Block>();
         }
@@ -221,40 +231,54 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
             }
         }
     }
+
+    /// <summary>
+    /// 引爆炸弹，优先引爆高级炸弹
+    /// </summary>
     void Bombs() {
         GetAllBombs();
-        foreach (var item in bombsBlocks[(int)BombType.NormalV]) {
-            Block[] db = new Block[3];
-            db[0] = item.GetNeighbour(2);
-            db[1] = item.GetNeighbour(0);
-            db[2] = item;
-
-            for (int i = 0; i < 3; i++) {
-                blocks.Remove(db[i].pos);
-                BlockPool.Instance.Push(db[i]);
-            }
-
-            item.afterBombType = item.bombType;
-            item.bombType = BombType.None;
+        foreach (var item in bombsBlocks[(int)BombType.SuperH]) {
+           item.Bomb();      
         }
-
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.SuperV]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.Circle1]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.Circle2]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.Circle3]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.Circle4]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.LineH]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.LineV]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
         foreach (var item in bombsBlocks[(int)BombType.NormalH]) {
-
-            Block[] db = new Block[3];
-            db[0] = item.GetNeighbour(1);
-            db[1] = item.GetNeighbour(3);
-            db[2] = item;
-
-            for (int i = 0; i < 3; i++) {
-                if (db[i]) {
-                    blocks.Remove(db[i].pos);
-                    BlockPool.Instance.Push(db[i]);
-                }
-                // db[i].transform.localScale = Vector3.one*0.1f;
-            }
-
-            item.afterBombType = item.bombType;
-            item.bombType = BombType.None;
+           item.Bomb();      
         }
+        CheckBlocks();
+        foreach (var item in bombsBlocks[(int)BombType.NormalV]) {
+           item.Bomb();      
+        }
+        CheckBlocks();
+    }
+    public void LLog() {
+        Debug.Log("block 字典" + blocks.Count.ToString());
     }
 }

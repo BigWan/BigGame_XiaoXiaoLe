@@ -32,7 +32,7 @@ public class BlockPool : UnitySingleton<BlockPool> {
 		int count = remainBlocks[idx].Count;
 		if(count < MinStored){
 			for (int i = 0; i <= MinStored - count; i++) {
-				Block b = Instantiate<Block>(blockPrefabs[idx]) as Block;
+				Block b = Instantiate(blockPrefabs[idx]) as Block;
 				Push(b,idx);
 			}
 		}
@@ -47,6 +47,7 @@ public class BlockPool : UnitySingleton<BlockPool> {
     /// <returns> 一个block实例,获取后需要重新设置transform </returns>
     public Block RandomPop() {
         int idx = Random.Range(0, blockPrefabs.Length);
+        //int idx = Random.Range(0, 2);
         return Pop(idx);
     }
 
@@ -69,4 +70,8 @@ public class BlockPool : UnitySingleton<BlockPool> {
 	public void Push(Block b){
 		Push(b,(int)b.colorType);
 	}
+
+    private void Update() {
+        
+    }
 }

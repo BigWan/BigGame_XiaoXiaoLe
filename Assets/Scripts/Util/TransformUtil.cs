@@ -12,7 +12,4 @@ public static class TransformUtil {
         tran.SetParent(parent,false);
         tran.Reset();
     }
-
-
-
 }

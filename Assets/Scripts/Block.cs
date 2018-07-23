@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-
+  
 public enum ColorType {
     Blue   = 0,
     Green  = 1,
@@ -41,7 +41,7 @@ public enum Direction{
 
 
 /// <summary>
-/// 消消乐里面的块,小动物,蔬菜,或是其他的东西
+/// 消消乐里面的块,小动物,蔬菜,或是其他能被消除的实体
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Animation))]
@@ -80,7 +80,7 @@ public class Block : MonoBehaviour {
                 _animator.SetInteger("BombType",2);
             }else{
                 _spriteRenderer.sprite = sp_N;
-                _animator.CrossFade("Idle",0.1f);
+                _animator.SetInteger("BombType",0);
             }
         }
     }
@@ -197,33 +197,113 @@ public class Block : MonoBehaviour {
 
     public void Bomb() {
         switch (bombType) {
-            case BombType.SuperH: // 垂直五连
+            case BombType.SuperH: // 水平五连
+                for(int i=0;i<concolorLength[3];i++){
+                    GetNeighbour(Vector2Int.left,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[1];i++){
+                    GetNeighbour(Vector2Int.right,i+1).Die();
+                }
+                afterBombType = bombType;
                 bombType = BombType.None;
-
                 break;
             case BombType.SuperV:
+                for(int i=0;i<concolorLength[0];i++){
+                    GetNeighbour(Vector2Int.up,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[2];i++){
+                    GetNeighbour(Vector2Int.down,i+1).Die();
+                }
+                afterBombType = bombType;
+                bombType = BombType.None;
                 break;
             case BombType.Circle1:
+                for(int i=0;i<concolorLength[0];i++){
+                    GetNeighbour(Vector2Int.up,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[1];i++){
+                    GetNeighbour(Vector2Int.right,i+1).Die();
+                }
+                afterBombType = bombType;
+                bombType = BombType.None;
                 break;
             case BombType.Circle2:
+                for(int i=0;i<concolorLength[2];i++){
+                    GetNeighbour(Vector2Int.down,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[1];i++){
+                    GetNeighbour(Vector2Int.right,i+1).Die();
+                }
+                afterBombType = bombType;
+                bombType = BombType.None;
                 break;
             case BombType.Circle3:
+                for(int i=0;i<concolorLength[2];i++){
+                    GetNeighbour(Vector2Int.down,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[3];i++){
+                    GetNeighbour(Vector2Int.left,i+1).Die();
+                }
+                afterBombType = bombType;
+                bombType = BombType.None;
                 break;
             case BombType.Circle4:
+                for(int i=0;i<concolorLength[0];i++){
+                    GetNeighbour(Vector2Int.up,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[3];i++){
+                    GetNeighbour(Vector2Int.left,i+1).Die();
+                }
+                afterBombType = bombType;
+                bombType = BombType.None;
                 break;
             case BombType.LineH:
+                for(int i=0;i<concolorLength[3];i++){
+                    GetNeighbour(Vector2Int.left,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[1];i++){
+                    GetNeighbour(Vector2Int.right,i+1).Die();
+                }
+                afterBombType = bombType;
+                bombType = BombType.None;
                 break;
             case BombType.LineV:
+                for(int i=0;i<concolorLength[0];i++){
+                    GetNeighbour(Vector2Int.up,i+1).Die();
+                }
+                for(int i=0;i<concolorLength[2];i++){
+                    GetNeighbour(Vector2Int.down,i+1).Die();
+                }
+                afterBombType = bombType;
+                bombType = BombType.None;
                 break;
             case BombType.NormalH:
+                GetNeighbour(Vector2Int.left).Die();
+                GetNeighbour(Vector2Int.right).Die();
+                afterBombType = bombType;
+                bombType = BombType.None;
+                this.Die();
                 break;
             case BombType.NormalV:
+                GetNeighbour(Vector2Int.up).Die();
+                GetNeighbour(Vector2Int.down).Die();
+                afterBombType = bombType;
+                bombType = BombType.None;
+                this.Die();
                 break;
             case BombType.None:
                 break;
             default:
                 break;
         }
+
+    }
+
+    public void Die(){
+        //transform.localScale = Vector3.one*0.5f;
+
+        CoordGrid.Instance.blocks.Remove(pos);
+        BlockPool.Instance.Push(this);
     }
 
     // 方块移动并合成炸弹

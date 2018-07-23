@@ -139,7 +139,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         b.pos = coord;
         b.name = coord.ToString();
         blocks.Add(b.pos, b);
-        Debug.Log("Spawn" + b.name);
+        // Debug.Log("Spawn" + b.name);
         //matrix[x, y] = (int)b.colorType;
     }
 
@@ -151,17 +151,17 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     /// 检查小动物是否能形成炸弹
     /// </summary>
     public void CheckBlocks() {
-        Debug.Log("开始遍历检查小动物" + blocks.Count.ToString());
-        // 调查邻边
+        Debug.Log("==开始遍历检查小动物" + blocks.Count.ToString());
 
+        // 调查邻边
         foreach (var b in blocks) {
-            b.Value.isEdgeConcolor = new bool[4] { false, false, false, false };
             b.Value.CheckNeightbourColor();
         }
-        // 计算同色长度
+
         foreach (var b in blocks) {
             b.Value.ResetConcolor();
         }
+        // 计算同色长度
         foreach (var b in blocks) {
             b.Value.CalcConcolorLength();
         }
@@ -169,8 +169,14 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         foreach (var b in blocks) {
             b.Value.CalcBombType();
         }
+        GetAllBombs();
     }
 
+
+    public void ClearAll(){
+        CheckBlocks();
+        Clear();
+    }
 
     /// <summary>
     ///  重新生成小动物
@@ -230,55 +236,53 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
                 bombsBlocks[(int)b.CalcBombType()].Add(b);
             }
         }
+        int acount = 0;
+        for (int i = 0; i < 10; i++) {
+            acount += bombsBlocks[i].Count;
+        }
+
+        Debug.Log("发现炸弹" + acount);
     }
 
     /// <summary>
     /// 引爆炸弹，优先引爆高级炸弹
     /// </summary>
-    void Bombs() {
-        GetAllBombs();
-        foreach (var item in bombsBlocks[(int)BombType.SuperH]) {
-           item.Bomb();      
+    void Clear() {
+        for (int i = 0; i < 10; i++) {
+            if(bombsBlocks[i].Count>0){
+                foreach (var item in bombsBlocks[i]) {
+                    item.Clear();
+                }
+                CheckBlocks();
+            }
         }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.SuperV]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.Circle1]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.Circle2]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.Circle3]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.Circle4]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.LineH]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.LineV]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.NormalH]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
-        foreach (var item in bombsBlocks[(int)BombType.NormalV]) {
-           item.Bomb();      
-        }
-        CheckBlocks();
     }
+
     public void LLog() {
         Debug.Log("block 字典" + blocks.Count.ToString());
     }
+
+    // 下落并生成随机块填充
+    public void DropDown(){
+        // 获取空洞
+        List<Vector2Int> holes = new List<Vector2Int>();  //空格
+        foreach (var coord in coords) {
+            if(!blocks.ContainsKey(coord)){
+                holes.Add(coord);
+            }
+        }
+        Debug.Log("空洞数量：" + holes.Count);
+        // 根据空洞z坐标下落
+
+        foreach (var hole in holes) {
+            foreach (var block in blocks.Values) {
+                if(block.pos.x == hole.x && block.pos.y > hole.y){
+                    block.pos.y -=1;
+                }
+            }
+
+        }
+
+    }
+
 }

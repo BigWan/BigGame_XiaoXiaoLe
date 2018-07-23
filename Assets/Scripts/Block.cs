@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-  
+
 public enum ColorType {
     Blue   = 0,
     Green  = 1,
@@ -142,7 +142,6 @@ public class Block : MonoBehaviour {
 
         bombType = BombType.None;
         afterBombType = BombType.None;
-
     }
 
     public void Select(){
@@ -195,7 +194,7 @@ public class Block : MonoBehaviour {
         bombType = BombType.None; return bombType;
     }
 
-    public void Bomb() {
+    public void Clear() {
         switch (bombType) {
             case BombType.SuperH: // 水平五连
                 for(int i=0;i<concolorLength[3];i++){
@@ -301,6 +300,8 @@ public class Block : MonoBehaviour {
 
     public void Die(){
         //transform.localScale = Vector3.one*0.5f;
+        // 爆炸
+        // 根据after bomb type die其他
 
         CoordGrid.Instance.blocks.Remove(pos);
         BlockPool.Instance.Push(this);
@@ -337,8 +338,11 @@ public class Block : MonoBehaviour {
         Block b;
         for (int i = 0; i < 4; i++) {
             b = GetNeighbour(neighboursOffset[i]);
-            if (b)
+            if (b){
                 isEdgeConcolor[i] = b.colorType == colorType;
+            }else {
+                isEdgeConcolor[i] = false;
+            }
         }
     }
 

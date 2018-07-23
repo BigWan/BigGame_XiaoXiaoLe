@@ -60,13 +60,11 @@ public class BlockPool : UnitySingleton<BlockPool> {
 			DestroyImmediate(b.gameObject);
 		}else{
 			remainBlocks[idx].Push(b);
-			b.gameObject.SetActive(false);
 			b.transform.Reset(transform);
             b.Reset();
+			b.gameObject.SetActive(false);
 		}
 	}
-
-
 
 	public void Push(Block b){
 		Push(b,(int)b.colorType);

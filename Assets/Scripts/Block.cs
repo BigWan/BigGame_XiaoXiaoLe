@@ -51,6 +51,8 @@ public class Block : MonoBehaviour {
 
     public Vector2Int pos;
 
+
+    [SerializeField]
     public int[] concolorLength;       // 四方向同色块数量,根据这个判断炸弹类型
     public bool[] isEdgeConcolor;      // 四条边是否和neighbour同色
 
@@ -78,6 +80,7 @@ public class Block : MonoBehaviour {
                 _animator.SetInteger("BombType",2);
             }else{
                 _spriteRenderer.sprite = sp_N;
+                _animator.CrossFade("Idle",0.1f);
             }
         }
     }
@@ -254,11 +257,16 @@ public class Block : MonoBehaviour {
         Block b;
         for (int i = 0; i < 4; i++) {
             b = GetNeighbour(neighboursOffset[i]);
-            if (b )
+            if (b)
                 isEdgeConcolor[i] = b.colorType == colorType;
         }
     }
 
+    public void ResetConcolor(){
+        for (int i = 0; i < 4; i++) {
+            concolorLength[i] = 0;
+        }
+    }
 
     // 计算同色块的长度
     public void CalcConcolorLength() {
@@ -271,9 +279,10 @@ public class Block : MonoBehaviour {
         }
     }
 
+    // 传递同色信息
     public void AddConcolorLength(int dirIdx) {
         concolorLength[dirIdx] += 1;
-        if (isEdgeConcolor[(dirIdx+2)%4] == true) {
+        if (isEdgeConcolor[(dirIdx+2)%4] == true) { // 传递同色信息
             GetNeighbour((dirIdx+2)%4).AddConcolorLength(dirIdx);
         }
     }

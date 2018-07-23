@@ -87,7 +87,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     /// </summary>
     void CreateGrid() {
         bool lord = false;
-        
+
         cells.Clear();
         foreach (var coord in coords) {
             lord = Convert.ToBoolean((coord.x + coord.y) & 1);
@@ -124,7 +124,6 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         foreach (var coord in coords) {
             SpawnBlock(coord, blocksHolder.transform);
         }
-
     }
 
     /// <summary>
@@ -153,6 +152,9 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
             b.Value.CheckNeightbourColor();
         }
 
+        foreach (var b in blocks) {
+            b.Value.ResetConcolor();
+        }
         foreach (var b in blocks) {
             b.Value.CalcConcolorLength();
         }
@@ -201,7 +203,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         CreateCoords();
         CreateGrid();
         CreateBlocks();
-        
+
         for (int i = 0; i < 10; i++) {
             bombsBlocks[i] = new List<Block>();
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using Random = UnityEngine.Random;
+using System.Linq;
 
 
 public delegate void SelectedBlockChangeHandler(Vector2Int selectPos);
@@ -16,7 +17,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     public int height;
 
     /// <summary>
-    /// 可用的格子列表(后面场景编辑器就是编辑这个)
+    /// 可用的格子列表(场景编辑器就是编辑这个)
     /// 会用作大部分对象字典的key值
     /// </summary>
     public List<Vector2Int> coords;
@@ -29,6 +30,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
 
     public GameObject blocksHolder;
 
+    public Queue<Vector2Int> selectedBlocks = new Queue<Vector2Int>();
     // 变量
 
     public Dictionary<Vector2Int, Block> blocks;  // Block 字典,key是坐标1
@@ -39,7 +41,6 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
 
     // Event
     private SelectedBlockChangeHandler SelectedBlockChange;
-
 
 
     private Block _currentSelectedBlock; // 当前选择对象的引用
@@ -61,7 +62,7 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     /// <summary>
     /// 父物体中心点
     /// </summary>
-    private Vector3 origin{
+    public Vector3 origin{
         get{
             return new Vector3(-(float)width*0.5f+0.5f,-(float)height*0.5f+0.5f);
         }
@@ -132,10 +133,10 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     /// <param name="coord">格子坐标</param>
     /// <param name="p">父物体</param>
     void SpawnBlock(Vector2Int coord,Transform p) {
-
-        Block b = BlockPool.Instance.RandomPop();
-        b.Reset();
-        b.transform.Reset(p);
+        Block b = BlockPool.Instance.RandomPopAt(coord,p);
+        //b.Reset();
+        //b.transform.Reset(p);
+        b.transform.localPosition = new Vector3(coord.x, height);
         b.pos = coord;
         b.name = coord.ToString();
         blocks.Add(b.pos, b);
@@ -147,35 +148,13 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         return coords.Contains(pos);
     }
 
-    /// <summary>
-    /// 检查小动物是否能形成炸弹
-    /// </summary>
-    public void CheckBlocks() {
-        Debug.Log("==开始遍历检查小动物" + blocks.Count.ToString());
-
-        // 调查邻边
-        foreach (var b in blocks) {
-            b.Value.CheckNeightbourColor();
-        }
-
-        foreach (var b in blocks) {
-            b.Value.ResetConcolor();
-        }
-        // 计算同色长度
-        foreach (var b in blocks) {
-            b.Value.CalcConcolorLength();
-        }
-        // 预先统计炸弹类型
-        foreach (var b in blocks) {
-            b.Value.CalcBombType();
-        }
-        GetAllBombs();
-    }
 
 
+
+    // 获取炸弹并爆炸
     public void ClearAll(){
         CheckBlocks();
-        Clear();
+        ClearSameBlockAndSpawnBomb();
     }
 
     /// <summary>
@@ -221,36 +200,68 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
 
         // 炸弹引用列表
         for (int i = 0; i < 10; i++) {
-            bombsBlocks[i] = new List<Block>();
+            spawnBombBlock[i] = new List<Block>();
         }
     }
 
 
-    public List<Block>[] bombsBlocks = new List<Block>[10];
-    public void GetAllBombs() {
-        for (int i = 0; i < 10; i++) {
-            bombsBlocks[i].Clear();
-        }
-        foreach (var b in blocks.Values) {
-            if (b.bombType != BombType.None) {
-                bombsBlocks[(int)b.CalcBombType()].Add(b);
-            }
-        }
-        int acount = 0;
-        for (int i = 0; i < 10; i++) {
-            acount += bombsBlocks[i].Count;
+    public List<Block>[] spawnBombBlock = new List<Block>[10];
+    /// <summary>
+    /// 检查小动物是否能形成炸弹
+    /// </summary>
+    public void CheckBlocks() {
+        Debug.Log("==开始遍历检查小动物" + blocks.Count.ToString());
+
+        // 调查邻边
+        foreach (var b in blocks) {
+            b.Value.CheckNeightbourColor();
         }
 
-        Debug.Log("发现炸弹" + acount);
+        foreach (var b in blocks) {
+            b.Value.ResetConcolor();
+        }
+        // 计算同色长度
+        foreach (var b in blocks) {
+            b.Value.CalcConcolorLength();
+        }
+        // 预先统计炸弹类型
+        foreach (var b in blocks) {
+            b.Value.CalcBombType();
+        }
+
+        // 统计炸弹
+        for (int i = 0; i < 10; i++) {
+            spawnBombBlock[i].Clear();
+        }
+        foreach (var b in blocks.Values) {
+            if (b.spawnBombType != BombType.None) {
+                spawnBombBlock[(int)b.CalcBombType()].Add(b);
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// 计算当前场面上需要消除的东西
+    /// </summary>
+    /// <returns></returns>
+    public int GetSpawnBombCount() {
+        CheckBlocks();
+
+        int spawnCount = 0;
+        for (int i = 0; i < 10; i++) {
+            spawnCount += spawnBombBlock[i].Count;
+        }
+        return spawnCount;
     }
 
     /// <summary>
-    /// 引爆炸弹，优先引爆高级炸弹
+    /// 消除可以炸掉的敌方，并在需要生成炸弹的敌方生成炸弹
     /// </summary>
-    void Clear() {
+    void ClearSameBlockAndSpawnBomb() {
         for (int i = 0; i < 10; i++) {
-            if(bombsBlocks[i].Count>0){
-                foreach (var item in bombsBlocks[i]) {
+            if(spawnBombBlock[i].Count > 0){
+                foreach (var item in spawnBombBlock[i]) {
                     item.Clear();
                 }
                 CheckBlocks();
@@ -258,31 +269,114 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
         }
     }
 
-    public void LLog() {
-        Debug.Log("block 字典" + blocks.Count.ToString());
-    }
 
-    // 下落并生成随机块填充
-    public void DropDown(){
-        // 获取空洞
+    /// <summary>
+    /// 获取空洞
+    /// </summary>
+    /// <returns></returns>
+    private List<Vector2Int> GetHoles() {
         List<Vector2Int> holes = new List<Vector2Int>();  //空格
         foreach (var coord in coords) {
-            if(!blocks.ContainsKey(coord)){
+            if (!blocks.ContainsKey(coord)) {
                 holes.Add(coord);
             }
         }
+        return holes;
+    }
+
+    // 下落并生成随机块填充
+    public void FallDown(){
+        // 获取空洞
+        List<Vector2Int> holes = GetHoles();  //空格
+
         Debug.Log("空洞数量：" + holes.Count);
-        // 根据空洞z坐标下落
 
         foreach (var hole in holes) {
             foreach (var block in blocks.Values) {
                 if(block.pos.x == hole.x && block.pos.y > hole.y){
-                    block.pos.y -=1;
+                    block.needFallHeight+=1;
                 }
             }
-
         }
 
+        foreach (var block in blocks.Values) {
+            block.Fall();
+        }
+
+
+        Dictionary<Vector2Int, Block> newdic = new Dictionary<Vector2Int, Block>();
+        foreach (var item in blocks) {
+            newdic.Add(item.Value.pos, item.Value);
+        }
+        blocks.Clear();
+        blocks = newdic;
+
+        holes.Clear();
+        foreach (var coord in coords) {
+            if (!blocks.ContainsKey(coord)) {
+                holes.Add(coord);  
+            }
+        }
+
+        foreach (var hole in holes) {
+            // 生成随机的块
+            SpawnBlock(hole, transform);
+        }
     }
+
+
+    /// <summary>
+    /// 开始消除
+    /// </summary>
+    public IEnumerator StartClear() {
+        int count = 0;
+        int spawnCount = GetSpawnBombCount();
+        while(spawnCount > 0) {
+            count += 1;
+            ClearSameBlockAndSpawnBomb();
+            yield return new WaitForSeconds(0.5f);
+            FallDown();
+            yield return new WaitForSeconds(1.5f);
+            spawnCount = GetSpawnBombCount();
+        }
+
+        Debug.Log( "发生这么多次变换" + count);
+       
+    }
+
+
+    public void Startt() {
+        StartCoroutine(StartClear());
+    }
+
+    /// <summary>
+    /// 交换
+    /// </summary>
+    /// <param name="a">一个格子坐标</param>
+    /// <param name="b">另一个格子坐标</param>
+    public IEnumerator Switch(Vector2Int a, Vector2Int b) {
+
+        (blocks[a], blocks[b]) = (blocks[b], blocks[a]);
+        (blocks[a].pos,blocks[b].pos) = (blocks[b].pos, blocks[a].pos); 
+       
+
+        if (GetSpawnBombCount() > 0) {
+            StartCoroutine(StartClear());
+        } else {
+            yield return new WaitForSeconds(0.25f);
+            (blocks[a], blocks[b]) = (blocks[b], blocks[a]);
+            (blocks[a].pos, blocks[b].pos) = (blocks[b].pos, blocks[a].pos);
+        }
+    }
+
+
+    public void AddSelectedBlock(Vector2Int x) {
+        selectedBlocks.Enqueue(x);
+        if (selectedBlocks.Count >= 2) {
+            StartCoroutine(Switch(selectedBlocks.Dequeue(), selectedBlocks.Dequeue()));
+        }
+    }
+
+
 
 }

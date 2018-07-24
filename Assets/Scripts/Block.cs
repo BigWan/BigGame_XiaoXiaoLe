@@ -51,40 +51,51 @@ public class Block : MonoBehaviour {
 
     public Vector2Int pos;
 
+    public int needFallHeight;
 
     [SerializeField]
     public int[] concolorLength;       // 四方向同色块数量,根据这个判断炸弹类型
     public bool[] isEdgeConcolor;      // 四条边是否和neighbour同色
 
     [SerializeField]
-    private BombType _bombType;           // 检查前的炸弹类型
+    private BombType _spawnBombType;           // 检查前的炸弹类型
+    public BombType spawnBombType {
+        get { return _spawnBombType; }
+        set {
+            _spawnBombType = value;
+            
+        }
+    }
+    [SerializeField]
+    private BombType _bombType;      // 计算后的炸弹类型
     public BombType bombType {
-        get { return _bombType; }
+        get {
+            return _bombType;
+        }
         set {
             _bombType = value;
-            if( _bombType==BombType.SuperH ||
-                _bombType == BombType.SuperV){
+            if (_bombType == BombType.SuperH ||
+                _bombType == BombType.SuperV) {
                 _spriteRenderer.sprite = sp_S;
-                _animator.SetInteger("BombType",4);
-            }else if(   _bombType==BombType.Circle1 ||
-                        _bombType==BombType.Circle3 ||
-                        _bombType==BombType.Circle3 ||
-                        _bombType==BombType.Circle4){
+                _animator.SetInteger("BombType", 4);
+            } else if (_bombType == BombType.Circle1 ||
+                         _bombType == BombType.Circle3 ||
+                         _bombType == BombType.Circle3 ||
+                         _bombType == BombType.Circle4) {
                 _spriteRenderer.sprite = sp_N;
-                _animator.SetInteger("BombType",3);
-            }else if(   _bombType==BombType.LineH){
+                _animator.SetInteger("BombType", 3);
+            } else if (_bombType == BombType.LineH) {
                 _spriteRenderer.sprite = sp_N;
-                _animator.SetInteger("BombType",1);
-            }else if(   _bombType==BombType.LineV){
+                _animator.SetInteger("BombType", 2);
+            } else if (_bombType == BombType.LineV) {
                 _spriteRenderer.sprite = sp_N;
-                _animator.SetInteger("BombType",2);
-            }else{
+                _animator.SetInteger("BombType", 1);
+            } else {
                 _spriteRenderer.sprite = sp_N;
-                _animator.SetInteger("BombType",0);
+                _animator.SetInteger("BombType", 0);
             }
         }
     }
-    public BombType afterBombType;      // 计算后的炸弹类型
 
     [Header("资源")]
     public AnimationClip selectedClip;
@@ -117,19 +128,16 @@ public class Block : MonoBehaviour {
     };
 
 
-
     void Awake(){
         _anim = GetComponent<Animation>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _animator = GetComponentInChildren <Animator>();
         selectEvent += OnSelected;
         deselectEvent += OnDeselect;
-
-        // Reset();
     }
 
     private void Update() {
-        transform.localPosition = new Vector3(pos.x, pos.y);
+        transform.localPosition = Vector3.MoveTowards(transform.localPosition,new Vector3(pos.x, pos.y),0.15f);
     }
 
     // 重置数据
@@ -137,11 +145,12 @@ public class Block : MonoBehaviour {
         _selected = false;
         isEdgeConcolor = new bool[4] { false,false,false,false };
         concolorLength = new int[4] { 0, 0, 0, 0 };
-        pos = Vector2Int.zero;
+        //pos = Vector2Int.zero;
+        pos = new Vector2Int(4,5);
         name = "pooled" + colorType.ToString();
 
+        spawnBombType = BombType.None;
         bombType = BombType.None;
-        afterBombType = BombType.None;
     }
 
     public void Select(){
@@ -177,118 +186,114 @@ public class Block : MonoBehaviour {
     // 炸弹类型
     public BombType CalcBombType() {
         // 五连
-        if(concolorLength[0] == 2 && concolorLength[2] >= 2){ bombType = BombType.SuperV;return bombType; }
-        if(concolorLength[3] == 2 && concolorLength[1] >= 2){ bombType = BombType.SuperH;return bombType; }
+        if(concolorLength[0] == 2 && concolorLength[2] >= 2){ spawnBombType = BombType.SuperV;return spawnBombType; }
+        if(concolorLength[3] == 2 && concolorLength[1] >= 2){ spawnBombType = BombType.SuperH;return spawnBombType; }
         // 圆炸
-        if(concolorLength[0] >= 2 && concolorLength[1] >= 2){ bombType = BombType.Circle1;return bombType;}
-        if(concolorLength[1] >= 2 && concolorLength[2] >= 2){ bombType = BombType.Circle2;return bombType;}
-        if(concolorLength[2] >= 2 && concolorLength[3] >= 2){ bombType = BombType.Circle3;return bombType;}
-        if(concolorLength[3] >= 2 && concolorLength[0] >= 2){ bombType = BombType.Circle4;return bombType;}
+        if(concolorLength[0] >= 2 && concolorLength[1] >= 2){ spawnBombType = BombType.Circle1;return spawnBombType;}
+        if(concolorLength[1] >= 2 && concolorLength[2] >= 2){ spawnBombType = BombType.Circle2;return spawnBombType;}
+        if(concolorLength[2] >= 2 && concolorLength[3] >= 2){ spawnBombType = BombType.Circle3;return spawnBombType;}
+        if(concolorLength[3] >= 2 && concolorLength[0] >= 2){ spawnBombType = BombType.Circle4;return spawnBombType;}
         // 线炸
-        if(concolorLength[0] == 1 && concolorLength[2] == 2){ bombType = BombType.LineV;return bombType;}
-        if(concolorLength[3] == 1 && concolorLength[1] == 2){ bombType = BombType.LineH;return bombType;}
+        if(concolorLength[0] == 1 && concolorLength[2] == 2){ spawnBombType = BombType.LineV;return spawnBombType;}
+        if(concolorLength[3] == 1 && concolorLength[1] == 2){ spawnBombType = BombType.LineH;return spawnBombType;}
         // 普通消失
-        if(concolorLength[0] == 1 && concolorLength[2] == 1){ bombType = BombType.NormalV;return bombType;}
-        if(concolorLength[1] == 1 && concolorLength[3] == 1){ bombType = BombType.NormalH;return bombType;}
+        if(concolorLength[0] == 1 && concolorLength[2] == 1){ spawnBombType = BombType.NormalV;return spawnBombType;}
+        if(concolorLength[1] == 1 && concolorLength[3] == 1){ spawnBombType = BombType.NormalH;return spawnBombType;}
 
-        bombType = BombType.None; return bombType;
+        spawnBombType = BombType.None; return spawnBombType;
     }
 
     public void Clear() {
-        switch (bombType) {
+        switch (spawnBombType) {
             case BombType.SuperH: // 水平五连
                 for(int i=0;i<concolorLength[3];i++){
-                    GetNeighbour(Vector2Int.left,i+1).Die();
+                    GetNeighbour(Vector2Int.left,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[1];i++){
-                    GetNeighbour(Vector2Int.right,i+1).Die();
+                    GetNeighbour(Vector2Int.right,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.SuperV:
                 for(int i=0;i<concolorLength[0];i++){
-                    GetNeighbour(Vector2Int.up,i+1).Die();
+                    GetNeighbour(Vector2Int.up,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[2];i++){
-                    GetNeighbour(Vector2Int.down,i+1).Die();
+                    GetNeighbour(Vector2Int.down,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.Circle1:
                 for(int i=0;i<concolorLength[0];i++){
-                    GetNeighbour(Vector2Int.up,i+1).Die();
+                    GetNeighbour(Vector2Int.up,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[1];i++){
-                    GetNeighbour(Vector2Int.right,i+1).Die();
+                    GetNeighbour(Vector2Int.right,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.Circle2:
                 for(int i=0;i<concolorLength[2];i++){
-                    GetNeighbour(Vector2Int.down,i+1).Die();
+                    GetNeighbour(Vector2Int.down,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[1];i++){
-                    GetNeighbour(Vector2Int.right,i+1).Die();
+                    GetNeighbour(Vector2Int.right,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.Circle3:
                 for(int i=0;i<concolorLength[2];i++){
-                    GetNeighbour(Vector2Int.down,i+1).Die();
+                    GetNeighbour(Vector2Int.down,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[3];i++){
-                    GetNeighbour(Vector2Int.left,i+1).Die();
+                    GetNeighbour(Vector2Int.left,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.Circle4:
                 for(int i=0;i<concolorLength[0];i++){
-                    GetNeighbour(Vector2Int.up,i+1).Die();
+                    GetNeighbour(Vector2Int.up,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[3];i++){
-                    GetNeighbour(Vector2Int.left,i+1).Die();
+                    GetNeighbour(Vector2Int.left,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.LineH:
                 for(int i=0;i<concolorLength[3];i++){
-                    GetNeighbour(Vector2Int.left,i+1).Die();
+                    GetNeighbour(Vector2Int.left,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[1];i++){
-                    GetNeighbour(Vector2Int.right,i+1).Die();
+                    GetNeighbour(Vector2Int.right,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.LineV:
                 for(int i=0;i<concolorLength[0];i++){
-                    GetNeighbour(Vector2Int.up,i+1).Die();
+                    GetNeighbour(Vector2Int.up,i+1).Bomb();
                 }
                 for(int i=0;i<concolorLength[2];i++){
-                    GetNeighbour(Vector2Int.down,i+1).Die();
+                    GetNeighbour(Vector2Int.down,i+1).Bomb();
                 }
-                afterBombType = bombType;
-                bombType = BombType.None;
+                bombType = spawnBombType;
+                spawnBombType = BombType.None;
                 break;
             case BombType.NormalH:
-                GetNeighbour(Vector2Int.left).Die();
-                GetNeighbour(Vector2Int.right).Die();
-                afterBombType = bombType;
-                bombType = BombType.None;
-                this.Die();
+                GetNeighbour(Vector2Int.left).Bomb();
+                GetNeighbour(Vector2Int.right).Bomb();
+                this.Bomb();
                 break;
             case BombType.NormalV:
-                GetNeighbour(Vector2Int.up).Die();
-                GetNeighbour(Vector2Int.down).Die();
-                afterBombType = bombType;
-                bombType = BombType.None;
-                this.Die();
+                GetNeighbour(Vector2Int.up).Bomb();
+                GetNeighbour(Vector2Int.down).Bomb();
+                this.Bomb();
                 break;
             case BombType.None:
                 break;
@@ -298,18 +303,57 @@ public class Block : MonoBehaviour {
 
     }
 
-    public void Die(){
+    public void Bomb(int ct = 0){
         //transform.localScale = Vector3.one*0.5f;
         // 爆炸
         // 根据after bomb type die其他
-
-        CoordGrid.Instance.blocks.Remove(pos);
-        BlockPool.Instance.Push(this);
+        List<Block> readyBombBlocks;
+        switch (bombType) {
+            case BombType.SuperH:
+            case BombType.SuperV:
+                readyBombBlocks = GetSameColorTypeBlocks(ct);
+                foreach (var item in readyBombBlocks) {
+                    item.Bomb();
+                }
+                break;
+            case BombType.Circle1:
+            case BombType.Circle2:
+            case BombType.Circle3:
+            case BombType.Circle4:
+                // 圆形炸弹
+                readyBombBlocks = GetBombCircleBlocks();
+                foreach (var item in readyBombBlocks) {
+                    item.Bomb();
+                }
+                break;
+            case BombType.LineH:
+                // 炸一列
+                readyBombBlocks = GetBombColumnBlocks();
+                foreach (var item in readyBombBlocks) {
+                    item.Bomb();
+                }
+                break;
+            case BombType.LineV:
+                // 炸一行
+                readyBombBlocks = GetBombRowBlocks();
+                foreach (var item in readyBombBlocks) {
+                    item.Bomb();
+                }
+                break;
+            case BombType.NormalH:
+            case BombType.NormalV:
+            case BombType.None:
+            default:
+                break;
+        }
+        StartCoroutine( Die ());
     }
 
-    // 方块移动并合成炸弹
-    public void Disappear(Vector2Int pos) {
-
+    public IEnumerator Die() {
+        CoordGrid.Instance.blocks.Remove(pos);
+        _animator.Play("Fire");
+        yield return new WaitForSeconds(0.5f);
+        BlockPool.Instance.Push(this);
     }
 
     /// <summary>
@@ -331,6 +375,51 @@ public class Block : MonoBehaviour {
         if (CoordGrid.Instance.blocks.ContainsKey(npos))
             return CoordGrid.Instance.blocks[npos];
         return null;
+    }
+
+
+    // 获取在自己爆炸半径内的Block
+    public List<Block> GetBombCircleBlocks() {
+        List<Block> result = new List<Block>();
+        foreach (var item in CoordGrid.Instance.blocks) {
+            int dis = (item.Value.pos - pos).ManhattanDistance();
+            if (dis > 0 && dis <= 2) {
+                result.Add(item.Value);
+            }
+        }
+        return result;
+    }
+    // 同行
+    public List<Block> GetBombRowBlocks() {
+        List<Block> result = new List<Block>();
+        foreach (var item in CoordGrid.Instance.blocks) {            
+            if (item.Value.pos.x !=pos.x && item.Value.pos.y==pos.y) {
+                result.Add(item.Value);
+            }
+        }
+        return result;
+    }
+
+    // 同列
+    public List<Block> GetBombColumnBlocks() {
+        List<Block> result = new List<Block>();
+        foreach (var item in CoordGrid.Instance.blocks) {
+            if (item.Value.pos.y != pos.y && item.Value.pos.x == pos.x) {
+                result.Add(item.Value);
+            }
+        }
+        return result;
+    }
+
+    // 同色
+    public List<Block> GetSameColorTypeBlocks(int ct) {
+        List<Block> result = new List<Block>();
+        foreach (var item in CoordGrid.Instance.blocks) {
+            if((int)item.Value.colorType == ct && item.Value.pos != pos) {
+                result.Add(item.Value);
+            }
+        }
+        return result;
     }
 
     // 检测邻居是否同色,填充 isEdgeConcolor 数组
@@ -363,7 +452,7 @@ public class Block : MonoBehaviour {
         }
     }
 
-    // 传递同色信息
+    // 
     public void AddConcolorLength(int dirIdx) {
         concolorLength[dirIdx] += 1;
         if (isEdgeConcolor[(dirIdx+2)%4] == true) { // 传递同色信息
@@ -371,6 +460,13 @@ public class Block : MonoBehaviour {
         }
     }
 
+    
+    public void Fall() {
+        if (needFallHeight != 0) {
+            pos = pos + Vector2Int.down * needFallHeight;
+            needFallHeight = 0;
+        }
+    }
 
-
+    
 }

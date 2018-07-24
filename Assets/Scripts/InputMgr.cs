@@ -20,9 +20,13 @@ public class InputMgr : MonoBehaviour {
                     b.Select();
                     CoordGrid.Instance.currentSelectedBlock = b;
                 }
-                Debug.Log(b.bombType);
+                //b.Bomb();
+                Debug.Log(b.spawnBombType);
+                CoordGrid.Instance.AddSelectedBlock(b.pos);
+                //CoordGrid.Instance.Switch(b.pos, b.pos + Vector2Int.right);
 
-			}
+
+            }
 		}
         if (Input.GetMouseButtonDown(1)) {
             Collider2D[] cols = Physics2D.OverlapPointAll(Camera.main.ScreenToWorldPoint(Input.mousePosition),1<<LayerMask.NameToLayer("Block"));

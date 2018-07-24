@@ -51,6 +51,22 @@ public class BlockPool : UnitySingleton<BlockPool> {
         return Pop(idx);
     }
 
+    public Block RandomPopAt(Vector2Int pos,Transform parent) {
+        int idx = Random.Range(0, blockPrefabs.Length);
+        int count = remainBlocks[idx].Count;
+        if (count < MinStored) {
+            for (int i = 0; i <= MinStored - count; i++) {
+                Block b = Instantiate(blockPrefabs[idx]) as Block;
+                Push(b, idx);
+            }
+        }
+        Block pb = remainBlocks[idx].Pop();
+        pb.transform.Reset(parent);
+        pb.transform.localPosition = new Vector3( pos.x,pos.y);
+        pb.gameObject.SetActive(true);
+        return pb;
+    }
+
 	/// <summary>
     /// 销毁一个Block对象
     /// </summary>
@@ -67,11 +83,13 @@ public class BlockPool : UnitySingleton<BlockPool> {
 		}
 	}
 
-	public void Push(Block b){
-		Push(b,(int)b.colorType);
-	}
+
+    public void Push(Block b) {
+        Push(b, (int)b.colorType);
+    }
 
     private void Update() {
         
     }
+
 }

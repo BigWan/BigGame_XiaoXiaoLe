@@ -67,21 +67,21 @@ public class BlockPool : UnitySingleton<BlockPool> {
         return pb;
     }
 
-	/// <summary>
+    /// <summary>
     /// 销毁一个Block对象
     /// </summary>
     /// <param name="b">Block对象</param>
     /// <param name="idx">Block对象的idx</param>
-	public void Push(Block b,int idx){
-		if(remainBlocks[idx].Count >= MaxStored){
-			DestroyImmediate(b.gameObject);
-		}else{
-			remainBlocks[idx].Push(b);
-			b.transform.Reset(transform);
+    private void Push(Block b, int idx) {
+        if (remainBlocks[idx].Count >= MaxStored) {
+            DestroyImmediate(b.gameObject);
+        } else {
+            remainBlocks[idx].Push(b);
+            b.transform.Reset(transform);
             b.Reset();
-			b.gameObject.SetActive(false);
-		}
-	}
+            b.gameObject.SetActive(false);
+        }
+    }
 
 
     public void Push(Block b) {

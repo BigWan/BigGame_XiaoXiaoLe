@@ -79,7 +79,7 @@ public class Block : MonoBehaviour {
                 _spriteRenderer.sprite = sp_S;
                 _animator.SetInteger("BombType", 4);
             } else if (_bombType == BombType.Circle1 ||
-                         _bombType == BombType.Circle3 ||
+                         _bombType == BombType.Circle2 ||
                          _bombType == BombType.Circle3 ||
                          _bombType == BombType.Circle4) {
                 _spriteRenderer.sprite = sp_N;

@@ -165,10 +165,11 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
             currentSelectedBlock.Deselect();
         }
         foreach (var item in blocks) {
-            BlockPool.Instance.Push(item.Value,(int)item.Value.colorType);
+            BlockPool.Instance.Push(item.Value);
         }
 
         CreateBlocks();
+        StartCoroutine( StartClear());
 
     }
 
@@ -357,15 +358,24 @@ public class CoordGrid : UnitySingleton<CoordGrid> {
     public IEnumerator Switch(Vector2Int a, Vector2Int b) {
 
         (blocks[a], blocks[b]) = (blocks[b], blocks[a]);
-        (blocks[a].pos,blocks[b].pos) = (blocks[b].pos, blocks[a].pos); 
-       
+        (blocks[a].pos,blocks[b].pos) = (blocks[b].pos, blocks[a].pos);
 
-        if (GetSpawnBombCount() > 0) {
-            StartCoroutine(StartClear());
-        } else {
-            yield return new WaitForSeconds(0.25f);
-            (blocks[a], blocks[b]) = (blocks[b], blocks[a]);
-            (blocks[a].pos, blocks[b].pos) = (blocks[b].pos, blocks[a].pos);
+        if(blocks[a].bombType == BombType.SuperH || blocks[a].bombType == BombType.SuperV) {
+            blocks[a].Bomb((int)blocks[b].colorType);
+        } else if (blocks[a].bombType != BombType.None && blocks[b].bombType != BombType.None) {
+            // 两个炸弹合起来爆炸
+            blocks[a].Bomb();
+            blocks[b].Bomb();
+            StartClear();
+        }else {
+
+            if (GetSpawnBombCount() > 0) {
+                StartCoroutine(StartClear());
+            } else {
+                yield return new WaitForSeconds(0.25f);
+                (blocks[a], blocks[b]) = (blocks[b], blocks[a]);
+                (blocks[a].pos, blocks[b].pos) = (blocks[b].pos, blocks[a].pos);
+            }
         }
     }
 
